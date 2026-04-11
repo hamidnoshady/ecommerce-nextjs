@@ -16,12 +16,18 @@ function toPlainText(input?: string): string {
 async function fetchWPGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
   if (!wpGraphqlUrl) throw new Error("WP_GRAPHQL_URL is not configured");
 
-  const res = await fetch(wpGraphqlUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-    next: { revalidate: 60 }
-  });
+  let res: Response;
+  try {
+    res = await fetch(wpGraphqlUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+      next: { revalidate: 60 }
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown fetch failure";
+    throw new Error(`WordPress GraphQL network error: ${message} (${wpGraphqlUrl})`);
+  }
 
   if (!res.ok) {
     throw new Error(`WordPress GraphQL request failed: ${res.status} (${wpGraphqlUrl})`);
@@ -211,8 +217,18 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
             ]
     };
   } catch (error) {
-    if (!(error instanceof Error) || !error.message.includes('Cannot query field "flexibleSections" on type "PageBuilder"')) {
+    if (!(error instanceof Error)) throw error;
+
+    const isFlexibleSectionsSchemaError = error.message.includes('Cannot query field "flexibleSections" on type "PageBuilder"');
+    const isNetworkError = error.message.includes('network error') || error.message.includes('fetch failed') || error.message.includes('EAI_AGAIN');
+
+    if (!isFlexibleSectionsSchemaError && !isNetworkError) {
       throw error;
+    }
+
+    if (isNetworkError) {
+      const localPage = pages.find((entry) => entry.slug === slug);
+      if (localPage) return localPage;
     }
 
     const basicData = await fetchWPGraphQL<{
@@ -244,28 +260,35 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
 export async function getBlogPosts(): Promise<BlogPost[]> {
   if (!wpGraphqlUrl) return posts;
 
-  const data = await fetchWPGraphQL<{
-    posts: {
-      nodes: Array<{
-        slug: string;
-        title?: string;
-        excerpt?: string;
-        content?: string;
-        date?: string;
-        dateGmt?: string;
-        categories?: { nodes?: Array<{ name?: string }> };
-      }>;
-    };
-  }>(POSTS_QUERY);
+  try {
+    const data = await fetchWPGraphQL<{
+      posts: {
+        nodes: Array<{
+          slug: string;
+          title?: string;
+          excerpt?: string;
+          content?: string;
+          date?: string;
+          dateGmt?: string;
+          categories?: { nodes?: Array<{ name?: string }> };
+        }>;
+      };
+    }>(POSTS_QUERY);
 
-  return data.posts.nodes.map((post) => ({
-    slug: post.slug,
-    title: toPlainText(post.title),
-    excerpt: toPlainText(post.excerpt),
-    body: toPlainText(post.content),
-    category: post.categories?.nodes?.[0]?.name ?? "Editorial",
-    publishedAt: post.dateGmt ?? post.date ?? ""
-  }));
+    return data.posts.nodes.map((post) => ({
+      slug: post.slug,
+      title: toPlainText(post.title),
+      excerpt: toPlainText(post.excerpt),
+      body: toPlainText(post.content),
+      category: post.categories?.nodes?.[0]?.name ?? "Editorial",
+      publishedAt: post.dateGmt ?? post.date ?? ""
+    }));
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes('network error') || error.message.includes('fetch failed') || error.message.includes('EAI_AGAIN'))) {
+      return posts;
+    }
+    throw error;
+  }
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost> {
@@ -275,26 +298,35 @@ export async function getBlogPost(slug: string): Promise<BlogPost> {
     return post;
   }
 
-  const data = await fetchWPGraphQL<{
-    post: {
-      slug: string;
-      title?: string;
-      excerpt?: string;
-      content?: string;
-      date?: string;
-      dateGmt?: string;
-      categories?: { nodes?: Array<{ name?: string }> };
-    } | null;
-  }>(POST_QUERY, { slug });
+  try {
+    const data = await fetchWPGraphQL<{
+      post: {
+        slug: string;
+        title?: string;
+        excerpt?: string;
+        content?: string;
+        date?: string;
+        dateGmt?: string;
+        categories?: { nodes?: Array<{ name?: string }> };
+      } | null;
+    }>(POST_QUERY, { slug });
 
-  if (!data.post) throw new Error(`Post not found for slug: ${slug}`);
+    if (!data.post) throw new Error(`Post not found for slug: ${slug}`);
 
-  return {
-    slug: data.post.slug,
-    title: toPlainText(data.post.title),
-    excerpt: toPlainText(data.post.excerpt),
-    body: toPlainText(data.post.content),
-    category: data.post.categories?.nodes?.[0]?.name ?? "Editorial",
-    publishedAt: data.post.dateGmt ?? data.post.date ?? ""
-  };
+    return {
+      slug: data.post.slug,
+      title: toPlainText(data.post.title),
+      excerpt: toPlainText(data.post.excerpt),
+      body: toPlainText(data.post.content),
+      category: data.post.categories?.nodes?.[0]?.name ?? "Editorial",
+      publishedAt: data.post.dateGmt ?? data.post.date ?? ""
+    };
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes('network error') || error.message.includes('fetch failed') || error.message.includes('EAI_AGAIN'))) {
+      const localPost = posts.find((entry) => entry.slug === slug);
+      if (localPost) return localPost;
+    }
+    throw error;
+  }
 }
+
