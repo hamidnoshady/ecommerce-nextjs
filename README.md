@@ -62,6 +62,11 @@ Notes:
 - If `WP_API_URL` or `WC_STORE_API_URL` are missing, this starter falls back to local mock data for development.
 - Production must point both variables to live WordPress/WooCommerce endpoints.
 
+Additional production env notes:
+- `WC_STORE_API_URL` must include the full Store API base ending in `/wp-json/wc/store/v1`.
+- For authenticated account/order history or protected WP endpoints, configure WordPress auth separately (JWT/Application Password/plugin strategy) and add corresponding server-only env variables.
+- Cart and checkout session continuity depends on WooCommerce cookies/tokens and same-site domain configuration in production.
+
 ## 5) Setup
 
 ```bash
@@ -90,3 +95,11 @@ npm run dev
 - Payment methods and express wallets require gateway plugin setup in WooCommerce admin.
 - Real WordPress menu + flexible section endpoint contract must be finalized with backend field group keys.
 - Image CDN, caching policy, and edge revalidation strategy should be tuned per hosting environment.
+
+
+## 8) Manual setup still required for production
+
+- Configure WooCommerce session/cookie behavior across your frontend and WP domains (reverse proxy and SameSite settings).
+- Connect real checkout submission to Store API checkout endpoints and verify payment gateway callbacks/webhooks.
+- Replace placeholder search and recommended-product logic with real backend queries and merchandising rules.
+- Replace static mobile filter options with taxonomy-driven filters from WooCommerce categories/attributes.

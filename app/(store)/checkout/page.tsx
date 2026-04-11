@@ -12,7 +12,7 @@ export default function CheckoutPage() {
         <div className="grid gap-4 sm:grid-cols-3"><Input placeholder="City" /><Input placeholder="State" /><Input placeholder="ZIP" /></div>
         <Button>Place order</Button>
       </form>
-      <aside className="rounded-2xl bg-brand-50 p-6"><h2 className="font-serif text-2xl">Order Summary</h2><p className="mt-2 text-sm text-neutral-600">Totals and payment methods from WooCommerce checkout endpoint.</p></aside>
+      <aside className="rounded-2xl bg-brand-50 p-6"><h2 className="font-serif text-2xl">Order Summary</h2><p className="mt-2 text-sm text-neutral-600">Totals and payment methods from WooCommerce checkout endpoint (requires live gateway + session configuration).</p></aside>
     </div>
   );
 }

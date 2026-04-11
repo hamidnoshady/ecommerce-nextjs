@@ -13,7 +13,7 @@ export default async function CartPage() {
         {cart.lines.length === 0 ? (
           <div className="mt-8 text-sm text-neutral-600">Your cart is empty. <Link href="/shop" className="underline">Continue shopping</Link>.</div>
         ) : (
-          <div>Cart lines render here from WooCommerce Store API.</div>
+          <div>Cart lines render here from WooCommerce Store API using shopper session cookies/tokens.</div>
         )}
         <div className="mt-8"><Button variant="secondary">Recommended products</Button></div>
       </section>

@@ -1,5 +1,6 @@
 import { ProductGrid } from "@/components/commerce/product-grid";
 import { getProductsByCategory } from "@/lib/api/woocommerce-client";
+import { ShopToolbar } from "@/components/commerce/shop-toolbar";
 
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -11,6 +12,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         <h1 className="font-serif text-4xl capitalize">{slug.replaceAll("-", " ")}</h1>
         <p className="mt-2 text-neutral-600">Editorial collection selected for targeted skin outcomes.</p>
       </section>
+      <ShopToolbar />
       <ProductGrid products={products} />
     </div>
   );
