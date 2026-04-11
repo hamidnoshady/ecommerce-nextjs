@@ -4,10 +4,26 @@ import { mapWpPostToBlogPost } from "@/lib/mappers/wordpress";
 
 const wpBase = process.env.WP_API_URL;
 
+function normalizeWpBaseUrl(input: string): string {
+  return input
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/wp-json\/wp\/v2$/i, "")
+    .replace(/\/wp-json$/i, "");
+}
+
+function joinUrl(base: string, path: string): string {
+  const normalizedBase = normalizeWpBaseUrl(base);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
 async function fetchWP<T>(path: string): Promise<T> {
   if (!wpBase) throw new Error("WP_API_URL is not configured");
-  const res = await fetch(`${wpBase}${path}`, { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error(`WordPress request failed: ${res.status}`);
+  const requestUrl = joinUrl(wpBase, path);
+
+  const res = await fetch(requestUrl, { next: { revalidate: 60 } });
+  if (!res.ok) throw new Error(`WordPress request failed: ${res.status} (${requestUrl})`);
   return res.json() as Promise<T>;
 }
 

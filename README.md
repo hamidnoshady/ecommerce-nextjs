@@ -61,6 +61,7 @@ WC_STORE_API_URL=https://your-wordpress-site.com/wp-json/wc/store/v1
 Notes:
 - If `WP_API_URL` or `WC_STORE_API_URL` are missing, this starter falls back to local mock data for development.
 - Production must point both variables to live WordPress/WooCommerce endpoints.
+- `WP_API_URL` should be the **WordPress site root** (for example `https://cms.example.com`). The app composes paths like `/wp-json/wp/v2/...` and normalizes accidental `/wp-json` suffixes.
 
 Additional production env notes:
 - `WC_STORE_API_URL` must include the full Store API base ending in `/wp-json/wc/store/v1`.
@@ -69,7 +70,7 @@ Additional production env notes:
 
 
 ### Variable ownership and usage
-- **WordPress variables**: `WP_API_URL` (CMS content via REST/custom headless endpoint).
+- **WordPress variables**: `WP_API_URL` (WordPress site root used to build CMS REST/custom headless endpoint requests).
 - **WooCommerce variables**: `WC_STORE_API_URL` (products/cart/checkout Store API).
 - **Public frontend variable**: `NEXT_PUBLIC_SITE_URL` (browser-safe canonical/site URL).
 
@@ -87,6 +88,13 @@ npm install
 ### Create local environment file
 ```bash
 cp .env.example .env.local
+```
+
+Working local/staging example:
+```bash
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+WP_API_URL=https://cms.example.com
+WC_STORE_API_URL=https://cms.example.com/wp-json/wc/store/v1
 ```
 
 ### Run development server
