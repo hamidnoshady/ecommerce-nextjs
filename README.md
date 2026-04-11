@@ -67,10 +67,30 @@ Additional production env notes:
 - For authenticated account/order history or protected WP endpoints, configure WordPress auth separately (JWT/Application Password/plugin strategy) and add corresponding server-only env variables.
 - Cart and checkout session continuity depends on WooCommerce cookies/tokens and same-site domain configuration in production.
 
+
+### Variable ownership and usage
+- **WordPress variables**: `WP_API_URL` (CMS content via REST/custom headless endpoint).
+- **WooCommerce variables**: `WC_STORE_API_URL` (products/cart/checkout Store API).
+- **Public frontend variable**: `NEXT_PUBLIC_SITE_URL` (browser-safe canonical/site URL).
+
+### NEXT_PUBLIC naming review
+- `NEXT_PUBLIC_SITE_URL` is intentionally public because it can be consumed in client-rendered metadata/links.
+- `WP_API_URL` and `WC_STORE_API_URL` are server-only integration endpoints and should **not** be prefixed with `NEXT_PUBLIC_`.
+
 ## 5) Setup
 
+### Install dependencies
 ```bash
 npm install
+```
+
+### Create local environment file
+```bash
+cp .env.example .env.local
+```
+
+### Run development server
+```bash
 npm run dev
 ```
 
@@ -103,3 +123,17 @@ npm run dev
 - Connect real checkout submission to Store API checkout endpoints and verify payment gateway callbacks/webhooks.
 - Replace placeholder search and recommended-product logic with real backend queries and merchandising rules.
 - Replace static mobile filter options with taxonomy-driven filters from WooCommerce categories/attributes.
+
+
+## 9) What will not fully work without live backend config
+
+- **Real cart persistence**: requires WooCommerce session cookies/tokens on matching domains.
+- **Checkout completion**: requires live checkout endpoint wiring and payment gateway setup (Stripe/PayPal/etc.).
+- **Account/order history**: requires authenticated WordPress/WooCommerce endpoints and auth strategy.
+- **Dynamic merchandising/search/filters**: currently placeholder UI must be backed by real taxonomy/query integrations.
+
+## 10) Environment variable summary
+
+- `NEXT_PUBLIC_SITE_URL`: frontend base URL for canonical links and public app URL context.
+- `WP_API_URL`: server-side WordPress origin used to fetch pages/posts/flexible content payloads.
+- `WC_STORE_API_URL`: server-side WooCommerce Store API base used for products, cart, and checkout flows.
