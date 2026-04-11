@@ -82,7 +82,12 @@ const PAGE_QUERY = `
     page(id: $uri, idType: URI) {
       slug
       title
-      excerpt
+      content
+      featuredImage {
+        node {
+          sourceUrl
+        }
+      }
       pageBuilder {
         flexibleSections {
           __typename
@@ -162,7 +167,8 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
     page: {
       slug: string;
       title?: string;
-      excerpt?: string;
+      content?: string;
+      featuredImage?: { node?: { sourceUrl?: string } };
       pageBuilder?: { flexibleSections?: Array<Record<string, unknown>> };
     } | null;
   }>(PAGE_QUERY, { uri: `/${slug}` });
@@ -174,7 +180,7 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
   return {
     slug: data.page.slug,
     title: toPlainText(data.page.title),
-    excerpt: toPlainText(data.page.excerpt),
+    excerpt: toPlainText(data.page.content),
     sections:
       mappedSections.length > 0
         ? mappedSections
@@ -183,7 +189,7 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
               id: `${slug}-hero-fallback`,
               type: "hero",
               heading: toPlainText(data.page.title),
-              body: toPlainText(data.page.excerpt)
+              body: toPlainText(data.page.content)
             }
           ]
   };
