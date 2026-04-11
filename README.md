@@ -42,6 +42,20 @@ Production-oriented starter architecture for a premium beauty storefront built w
   - newsletter
   - CTA
 
+
+## WordPress backend endpoint requirement
+
+This frontend expects a **custom WordPress REST route** at:
+- `/wp-json/headless/v1/pages/{slug}`
+
+The current repository does **not** include WordPress plugin/mu-plugin/backend PHP code that registers this route.
+That backend route must be implemented and activated on the WordPress server for full flexible-section page payloads.
+
+### Development-safe fallback behavior
+- If `/wp-json/headless/v1/pages/{slug}` returns `404`, the frontend now falls back to standard WordPress REST pages: `/wp-json/wp/v2/pages?slug={slug}`.
+- Fallback pages render a minimal hero section (title/excerpt) so homepage/page routes still load in local/staging environments.
+- For production flexible content composition, you still need the custom `headless/v1` route.
+
 ## 3) Commerce strategy
 
 - WooCommerce Store API for product listing, single product, cart, and checkout.
@@ -121,7 +135,7 @@ npm run dev
 
 - Real checkout submission/validation should be wired to WooCommerce checkout endpoint with nonce/token handling.
 - Payment methods and express wallets require gateway plugin setup in WooCommerce admin.
-- Real WordPress menu + flexible section endpoint contract must be finalized with backend field group keys.
+- Real WordPress menu + flexible section endpoint contract must be finalized with backend field group keys (custom `/wp-json/headless/v1` route is required and not shipped in this repo).
 - Image CDN, caching policy, and edge revalidation strategy should be tuned per hosting environment.
 
 

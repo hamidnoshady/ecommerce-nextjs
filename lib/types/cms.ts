@@ -56,3 +56,10 @@ export type RawWpPost = {
     "wp:term"?: Array<Array<{ name?: string }>>;
   };
 };
+
+
+export type RawWpPage = {
+  slug: string;
+  title?: { rendered?: string };
+  excerpt?: { rendered?: string };
+};
