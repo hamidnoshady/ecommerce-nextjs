@@ -23,7 +23,7 @@ Production-oriented starter architecture for a premium beauty storefront built w
 
 ### Recommended CPT/field approach
 - Keep WP pages/posts for editorial content.
-- Add a custom headless endpoint (`/wp-json/headless/v1/pages/{slug}`) returning normalized flexible sections.
+- Expose page + flexible section data through WPGraphQL (with WPGraphQL for ACF enabled for section fields).
 - Homepage and marketing pages use ACF Flexible Content (`layout` keys mapped to approved section types).
 - Suggested ACF layouts:
   - hero
@@ -45,16 +45,25 @@ Production-oriented starter architecture for a premium beauty storefront built w
 
 ## WordPress backend endpoint requirement
 
-This frontend expects a **custom WordPress REST route** at:
-- `/wp-json/headless/v1/pages/{slug}`
+This frontend uses **WPGraphQL** for WordPress content:
+- Pages/homepage content
+- Blog index and article content
+- Flexible section fields via ACF
 
-The current repository does **not** include WordPress plugin/mu-plugin/backend PHP code that registers this route.
-That backend route must be implemented and activated on the WordPress server for full flexible-section page payloads.
+Required WordPress plugins:
+1. **WPGraphQL** (active)
+2. **Advanced Custom Fields Pro** (or compatible ACF setup)
+3. **WPGraphQL for ACF** (active)
 
-### Development-safe fallback behavior
-- If `/wp-json/headless/v1/pages/{slug}` returns `404`, the frontend now falls back to standard WordPress REST pages: `/wp-json/wp/v2/pages?slug={slug}`.
-- Fallback pages render a minimal hero section (title/excerpt) so homepage/page routes still load in local/staging environments.
-- For production flexible content composition, you still need the custom `headless/v1` route.
+Required WordPress field settings:
+- Flexible content field groups must be set to **Show in GraphQL**.
+- Field groups should expose stable GraphQL field names used by the frontend queries.
+- Homepage/page flexible fields should be attached to the `Page` post type.
+
+GraphQL endpoint example:
+- `https://cms.example.com/graphql`
+
+Note: this repository does **not** include WordPress plugin PHP code; plugin installation/activation happens in your WordPress environment.
 
 ## 3) Commerce strategy
 
@@ -68,14 +77,15 @@ Create `.env.local`:
 
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+WP_GRAPHQL_URL=https://your-wordpress-site.com/graphql
 WP_API_URL=https://your-wordpress-site.com
 WC_STORE_API_URL=https://your-wordpress-site.com/wp-json/wc/store/v1
 ```
 
 Notes:
-- If `WP_API_URL` or `WC_STORE_API_URL` are missing, this starter falls back to local mock data for development.
-- Production must point both variables to live WordPress/WooCommerce endpoints.
-- `WP_API_URL` should be the **WordPress site root** (for example `https://cms.example.com`). The app composes paths like `/wp-json/wp/v2/...` and normalizes accidental `/wp-json` suffixes.
+- If `WP_GRAPHQL_URL` (or `WP_API_URL`) / `WC_STORE_API_URL` are missing, this starter falls back to local mock data for development.
+- Production must point content to a live WordPress GraphQL endpoint and commerce to a live WooCommerce Store API endpoint.
+- Preferred content config is `WP_GRAPHQL_URL=https://cms.example.com/graphql`.
 
 Additional production env notes:
 - `WC_STORE_API_URL` must include the full Store API base ending in `/wp-json/wc/store/v1`.
@@ -84,13 +94,13 @@ Additional production env notes:
 
 
 ### Variable ownership and usage
-- **WordPress variables**: `WP_API_URL` (WordPress site root used to build CMS REST/custom headless endpoint requests).
+- **WordPress variables**: `WP_GRAPHQL_URL` (primary WPGraphQL endpoint for pages/posts/flexible fields). Optional `WP_API_URL` can be used as a fallback base to derive `/graphql`.
 - **WooCommerce variables**: `WC_STORE_API_URL` (products/cart/checkout Store API).
 - **Public frontend variable**: `NEXT_PUBLIC_SITE_URL` (browser-safe canonical/site URL).
 
 ### NEXT_PUBLIC naming review
 - `NEXT_PUBLIC_SITE_URL` is intentionally public because it can be consumed in client-rendered metadata/links.
-- `WP_API_URL` and `WC_STORE_API_URL` are server-only integration endpoints and should **not** be prefixed with `NEXT_PUBLIC_`.
+- `WP_GRAPHQL_URL`, `WP_API_URL`, and `WC_STORE_API_URL` are server-only integration endpoints and should **not** be prefixed with `NEXT_PUBLIC_`.
 
 ## 5) Setup
 
@@ -107,6 +117,7 @@ cp .env.example .env.local
 Working local/staging example:
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+WP_GRAPHQL_URL=https://cms.example.com/graphql
 WP_API_URL=https://cms.example.com
 WC_STORE_API_URL=https://cms.example.com/wp-json/wc/store/v1
 ```
@@ -135,7 +146,7 @@ npm run dev
 
 - Real checkout submission/validation should be wired to WooCommerce checkout endpoint with nonce/token handling.
 - Payment methods and express wallets require gateway plugin setup in WooCommerce admin.
-- Real WordPress menu + flexible section endpoint contract must be finalized with backend field group keys (custom `/wp-json/headless/v1` route is required and not shipped in this repo).
+- WPGraphQL + WPGraphQL for ACF schema/field naming must be finalized with backend field group keys and GraphQL visibility settings.
 - Image CDN, caching policy, and edge revalidation strategy should be tuned per hosting environment.
 
 
@@ -157,5 +168,6 @@ npm run dev
 ## 10) Environment variable summary
 
 - `NEXT_PUBLIC_SITE_URL`: frontend base URL for canonical links and public app URL context.
-- `WP_API_URL`: server-side WordPress origin used to fetch pages/posts/flexible content payloads.
+- `WP_GRAPHQL_URL`: primary WordPress GraphQL endpoint used for pages/posts/flexible content payloads.
+- `WP_API_URL`: optional WordPress origin used only to derive `/graphql` when `WP_GRAPHQL_URL` is not explicitly set.
 - `WC_STORE_API_URL`: server-side WooCommerce Store API base used for products, cart, and checkout flows.
