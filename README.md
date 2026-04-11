@@ -60,6 +60,12 @@ Required WordPress field settings:
 - Field groups should expose stable GraphQL field names used by the frontend queries.
 - Homepage/page flexible fields should be attached to the `Page` post type.
 
+
+### Quick import file included in this repo
+- File: `wordpress/acf/page-builder.acf.json`
+- In WordPress Admin: **Custom Fields → Tools → Import Field Groups** and import that file.
+- This import matches the current frontend query contract in `lib/api/wp-client.ts` (`pageBuilder.flexibleSections` with `hero`, `richtext`, `featuredproducts`, `faq`).
+
 GraphQL endpoint example:
 - `https://cms.example.com/graphql`
 

@@ -1,0 +1,186 @@
+[
+  {
+    "key": "group_page_builder",
+    "title": "Page Builder",
+    "fields": [
+      {
+        "key": "field_page_builder_group",
+        "label": "Page Builder",
+        "name": "page_builder",
+        "type": "group",
+        "show_in_graphql": 1,
+        "graphql_field_name": "pageBuilder",
+        "sub_fields": [
+          {
+            "key": "field_flexible_sections",
+            "label": "Flexible Sections",
+            "name": "flexible_sections",
+            "type": "flexible_content",
+            "button_label": "Add Section",
+            "show_in_graphql": 1,
+            "graphql_field_name": "flexibleSections",
+            "layouts": {
+              "layout_hero": {
+                "key": "layout_hero",
+                "name": "hero",
+                "label": "Hero",
+                "display": "block",
+                "sub_fields": [
+                  {
+                    "key": "field_hero_id",
+                    "label": "ID",
+                    "name": "id",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "id"
+                  },
+                  {
+                    "key": "field_hero_heading",
+                    "label": "Heading",
+                    "name": "heading",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "heading"
+                  },
+                  {
+                    "key": "field_hero_body",
+                    "label": "Body",
+                    "name": "body",
+                    "type": "textarea",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "body"
+                  },
+                  {
+                    "key": "field_hero_cta_label",
+                    "label": "CTA Label",
+                    "name": "cta_label",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "ctaLabel"
+                  },
+                  {
+                    "key": "field_hero_cta_href",
+                    "label": "CTA Href",
+                    "name": "cta_href",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "ctaHref"
+                  }
+                ]
+              },
+              "layout_richtext": {
+                "key": "layout_richtext",
+                "name": "richtext",
+                "label": "Rich Text",
+                "display": "block",
+                "sub_fields": [
+                  {
+                    "key": "field_richtext_id",
+                    "label": "ID",
+                    "name": "id",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "id"
+                  },
+                  {
+                    "key": "field_richtext_heading",
+                    "label": "Heading",
+                    "name": "heading",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "heading"
+                  },
+                  {
+                    "key": "field_richtext_body",
+                    "label": "Body",
+                    "name": "body",
+                    "type": "textarea",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "body"
+                  }
+                ]
+              },
+              "layout_featuredproducts": {
+                "key": "layout_featuredproducts",
+                "name": "featuredproducts",
+                "label": "Featured Products",
+                "display": "block",
+                "sub_fields": [
+                  {
+                    "key": "field_featuredproducts_id",
+                    "label": "ID",
+                    "name": "id",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "id"
+                  },
+                  {
+                    "key": "field_featuredproducts_heading",
+                    "label": "Heading",
+                    "name": "heading",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "heading"
+                  },
+                  {
+                    "key": "field_featuredproducts_product_slugs",
+                    "label": "Product Slugs",
+                    "name": "product_slugs",
+                    "type": "textarea",
+                    "instructions": "One product slug per line.",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "productSlugs"
+                  }
+                ]
+              },
+              "layout_faq": {
+                "key": "layout_faq",
+                "name": "faq",
+                "label": "FAQ",
+                "display": "block",
+                "sub_fields": [
+                  {
+                    "key": "field_faq_id",
+                    "label": "ID",
+                    "name": "id",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "id"
+                  },
+                  {
+                    "key": "field_faq_heading",
+                    "label": "Heading",
+                    "name": "heading",
+                    "type": "text",
+                    "show_in_graphql": 1,
+                    "graphql_field_name": "heading"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_type",
+          "operator": "==",
+          "value": "page"
+        }
+      ]
+    ],
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "active": true,
+    "show_in_graphql": 1,
+    "graphql_field_name": "pageBuilder",
+    "map_graphql_types_from_location_rules": 1,
+    "graphql_types": [
+      "Page"
+    ]
+  }
+]
