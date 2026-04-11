@@ -118,6 +118,22 @@ const PAGE_QUERY = `
   }
 `;
 
+
+const PAGE_QUERY_BASIC = `
+  query PageBySlugBasic($uri: ID!) {
+    page(id: $uri, idType: URI) {
+      slug
+      title
+      content
+      featuredImage {
+        node {
+          sourceUrl
+        }
+      }
+    }
+  }
+`;
+
 const POSTS_QUERY = `
   query PostsIndex {
     posts(first: 50, where: { status: PUBLISH }) {
@@ -163,36 +179,66 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
     return page;
   }
 
-  const data = await fetchWPGraphQL<{
-    page: {
-      slug: string;
-      title?: string;
-      content?: string;
-      featuredImage?: { node?: { sourceUrl?: string } };
-      pageBuilder?: { flexibleSections?: Array<Record<string, unknown>> };
-    } | null;
-  }>(PAGE_QUERY, { uri: `/${slug}` });
+  try {
+    const data = await fetchWPGraphQL<{
+      page: {
+        slug: string;
+        title?: string;
+        content?: string;
+        featuredImage?: { node?: { sourceUrl?: string } };
+        pageBuilder?: { flexibleSections?: Array<Record<string, unknown>> };
+      } | null;
+    }>(PAGE_QUERY, { uri: `/${slug}` });
 
-  if (!data.page) throw new Error(`Page not found for slug: ${slug}`);
+    if (!data.page) throw new Error(`Page not found for slug: ${slug}`);
 
-  const mappedSections = mapFlexibleSections(data.page.pageBuilder?.flexibleSections);
+    const mappedSections = mapFlexibleSections(data.page.pageBuilder?.flexibleSections);
 
-  return {
-    slug: data.page.slug,
-    title: toPlainText(data.page.title),
-    excerpt: toPlainText(data.page.content),
-    sections:
-      mappedSections.length > 0
-        ? mappedSections
-        : [
-            {
-              id: `${slug}-hero-fallback`,
-              type: "hero",
-              heading: toPlainText(data.page.title),
-              body: toPlainText(data.page.content)
-            }
-          ]
-  };
+    return {
+      slug: data.page.slug,
+      title: toPlainText(data.page.title),
+      excerpt: toPlainText(data.page.content),
+      sections:
+        mappedSections.length > 0
+          ? mappedSections
+          : [
+              {
+                id: `${slug}-hero-fallback`,
+                type: "hero",
+                heading: toPlainText(data.page.title),
+                body: toPlainText(data.page.content)
+              }
+            ]
+    };
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('Cannot query field "flexibleSections" on type "PageBuilder"')) {
+      throw error;
+    }
+
+    const basicData = await fetchWPGraphQL<{
+      page: {
+        slug: string;
+        title?: string;
+        content?: string;
+      } | null;
+    }>(PAGE_QUERY_BASIC, { uri: `/${slug}` });
+
+    if (!basicData.page) throw new Error(`Page not found for slug: ${slug}`);
+
+    return {
+      slug: basicData.page.slug,
+      title: toPlainText(basicData.page.title),
+      excerpt: toPlainText(basicData.page.content),
+      sections: [
+        {
+          id: `${slug}-hero-fallback`,
+          type: "hero",
+          heading: toPlainText(basicData.page.title),
+          body: toPlainText(basicData.page.content)
+        }
+      ]
+    };
+  }
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {

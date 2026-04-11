@@ -69,6 +69,12 @@ Required WordPress field settings:
 GraphQL endpoint example:
 - `https://cms.example.com/graphql`
 
+
+### Troubleshooting: `Cannot query field "flexibleSections" on type "PageBuilder"`
+- This means the ACF GraphQL field name on your `Page Builder` group does not match the frontend query expectation.
+- Ensure the nested field is exposed as GraphQL field name: `flexibleSections`.
+- The frontend now falls back to a basic page query (`slug`, `title`, `content`) so pages still load while you fix ACF GraphQL field names.
+
 Note: this repository does **not** include WordPress plugin PHP code; plugin installation/activation happens in your WordPress environment.
 
 ## 3) Commerce strategy
