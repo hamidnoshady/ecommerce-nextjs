@@ -1,5 +1,6 @@
 import { products } from "@/lib/api/mock-data";
-import { Cart, Product } from "@/lib/types/commerce";
+import { Cart, Product, RawWooProduct } from "@/lib/types/commerce";
+import { mapWooProductToProduct } from "@/lib/mappers/woocommerce";
 
 const wcBase = process.env.WC_STORE_API_URL;
 
@@ -12,7 +13,8 @@ async function fetchWC<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function getProducts(): Promise<Product[]> {
   if (!wcBase) return products;
-  return fetchWC<Product[]>("/products");
+  const rawProducts = await fetchWC<RawWooProduct[]>("/products");
+  return rawProducts.map(mapWooProductToProduct);
 }
 
 export async function getProductsByCategory(category: string): Promise<Product[]> {

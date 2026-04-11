@@ -43,3 +43,16 @@ export type BlogPost = {
   category: string;
   publishedAt: string;
 };
+
+
+export type RawWpPost = {
+  slug: string;
+  date: string;
+  date_gmt?: string;
+  title?: { rendered?: string };
+  excerpt?: { rendered?: string };
+  content?: { rendered?: string };
+  _embedded?: {
+    "wp:term"?: Array<Array<{ name?: string }>>;
+  };
+};

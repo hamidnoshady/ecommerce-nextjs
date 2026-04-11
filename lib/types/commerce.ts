@@ -28,3 +28,21 @@ export type Cart = {
   subtotal: Money;
   discountTotal: Money;
 };
+
+
+export type RawWooProduct = {
+  id: number;
+  slug: string;
+  name: string;
+  short_description?: string;
+  description?: string;
+  images?: Array<{ src: string }>;
+  prices?: {
+    currency_code?: string;
+    currency_minor_unit?: number;
+    price?: string;
+    regular_price?: string;
+  };
+  categories?: Array<{ slug: string; name?: string }>;
+  on_sale?: boolean;
+};

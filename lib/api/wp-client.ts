@@ -1,5 +1,6 @@
 import { pages, posts } from "@/lib/api/mock-data";
-import { BlogPost, CMSPage } from "@/lib/types/cms";
+import { BlogPost, CMSPage, RawWpPost } from "@/lib/types/cms";
+import { mapWpPostToBlogPost } from "@/lib/mappers/wordpress";
 
 const wpBase = process.env.WP_API_URL;
 
@@ -21,7 +22,8 @@ export async function getPageBySlug(slug: string): Promise<CMSPage> {
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
   if (!wpBase) return posts;
-  return fetchWP<BlogPost[]>("/wp-json/wp/v2/posts?_embed");
+  const rawPosts = await fetchWP<RawWpPost[]>("/wp-json/wp/v2/posts?_embed");
+  return rawPosts.map(mapWpPostToBlogPost);
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost> {
