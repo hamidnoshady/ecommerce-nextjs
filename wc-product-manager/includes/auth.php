@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/Users.php';
 
 /**
  * Starts (or resumes) the PHP session using the configured session name/lifetime.
@@ -27,19 +28,26 @@ function start_app_session(): void
 }
 
 /**
- * Returns the logged-in user (['phone' => ..., 'role' => ...]) or null.
+ * Returns the logged-in user (['id' => ..., 'phone' => ..., 'name' => ..., 'role' => ...]) or null.
  */
 function current_user(): ?array
 {
     start_app_session();
 
-    if (empty($_SESSION['phone']) || empty($_SESSION['role'])) {
+    if (empty($_SESSION['user_id'])) {
+        return null;
+    }
+
+    $user = find_user_by_id((int) $_SESSION['user_id']);
+    if ($user === null) {
         return null;
     }
 
     return [
-        'phone' => $_SESSION['phone'],
-        'role'  => $_SESSION['role'],
+        'id'    => (int) $user['id'],
+        'phone' => $user['phone'],
+        'name'  => $user['name'],
+        'role'  => $user['role'],
     ];
 }
 
@@ -51,6 +59,19 @@ function require_login_page(): array
     $user = current_user();
     if ($user === null) {
         header('Location: /login.php');
+        exit;
+    }
+    return $user;
+}
+
+/**
+ * Redirects to the products page if the logged-in user is not a superadmin (for HTML pages).
+ */
+function require_superadmin_page(): array
+{
+    $user = require_login_page();
+    if ($user['role'] !== 'superadmin') {
+        header('Location: /products.php');
         exit;
     }
     return $user;
@@ -78,6 +99,14 @@ function require_role_api(array $roles): array
         json_response(['error' => 'Forbidden'], 403);
     }
     return $user;
+}
+
+/**
+ * Returns a JSON 403 error if the current user is not a superadmin.
+ */
+function require_superadmin_api(): array
+{
+    return require_role_api(['superadmin']);
 }
 
 /**
@@ -113,9 +142,8 @@ function verify_csrf_api(): void
 function request_otp(string $phone): array
 {
     $config = app_config();
-    $users = $config['users'] ?? [];
 
-    if (!array_key_exists($phone, $users)) {
+    if (bootstrap_user_by_phone($phone) === null) {
         // Avoid revealing whether a number is registered.
         return ['ok' => false, 'error' => 'This phone number is not authorized.'];
     }
@@ -158,10 +186,8 @@ function request_otp(string $phone): array
  */
 function verify_otp(string $phone, string $code): array
 {
-    $config = app_config();
-    $users = $config['users'] ?? [];
-
-    if (!array_key_exists($phone, $users)) {
+    $user = bootstrap_user_by_phone($phone);
+    if ($user === null) {
         return ['ok' => false, 'error' => 'This phone number is not authorized.'];
     }
 
@@ -183,10 +209,10 @@ function verify_otp(string $phone, string $code): array
 
     start_app_session();
     session_regenerate_id(true);
-    $_SESSION['phone'] = $phone;
-    $_SESSION['role'] = $users[$phone];
+    $_SESSION['user_id'] = (int) $user['id'];
+    unset($_SESSION['site_id']);
 
-    return ['ok' => true, 'role' => $users[$phone]];
+    return ['ok' => true, 'role' => $user['role']];
 }
 
 /**

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Minimal SQLite wrapper used for OTP codes and rate limiting.
+ * SQLite wrapper for the app database (users, sites, site assignments, OTP codes).
  * Creates the database file and schema on first use.
  */
 class Database
@@ -19,9 +19,10 @@ class Database
             mkdir($dir, 0775, true);
         }
 
-        $path = $dir . '/otp.sqlite';
+        $path = $dir . '/app.sqlite';
         $pdo = new PDO('sqlite:' . $path);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->exec('PRAGMA foreign_keys = ON');
 
         $pdo->exec(
             'CREATE TABLE IF NOT EXISTS otp_codes (
@@ -34,6 +35,36 @@ class Database
             )'
         );
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_codes (phone)');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                phone TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL DEFAULT \'\',
+                role TEXT NOT NULL CHECK (role IN (\'superadmin\', \'admin\', \'shop_manager\')),
+                created_at INTEGER NOT NULL
+            )'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS sites (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                store_url TEXT NOT NULL,
+                consumer_key TEXT NOT NULL,
+                consumer_secret TEXT NOT NULL,
+                verify_ssl INTEGER NOT NULL DEFAULT 1,
+                created_at INTEGER NOT NULL
+            )'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS user_sites (
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+                PRIMARY KEY (user_id, site_id)
+            )'
+        );
 
         self::$pdo = $pdo;
         return $pdo;

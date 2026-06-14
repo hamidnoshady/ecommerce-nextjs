@@ -3,8 +3,11 @@
 require_once __DIR__ . '/../../includes/helpers.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/WooCommerceClient.php';
+require_once __DIR__ . '/../../includes/Sites.php';
+require_once __DIR__ . '/../../includes/site_context.php';
 
-require_login_api();
+$user = require_login_api();
+$site = require_site_api($user);
 verify_csrf_api();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -22,12 +25,11 @@ if (empty($ids)) {
 $action = $body['action'] ?? '';
 $preview = !empty($body['preview']);
 
-$config = app_config();
-$client = new WooCommerceClient($config['woocommerce']);
+$client = woocommerce_client_for_site($site);
 
 if ($action === 'price') {
     // Bulk price changes are restricted to admins.
-    require_role_api(['admin']);
+    require_role_api(['admin', 'superadmin']);
 
     $percent = (float) ($body['percent'] ?? 0);
     $mode = (string) ($body['mode'] ?? 'none');

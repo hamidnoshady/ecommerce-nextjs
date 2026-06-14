@@ -39,6 +39,11 @@ const App = {
       return new Promise(() => {});
     }
 
+    if (response.status === 409) {
+      window.location.href = '/sites.php';
+      return new Promise(() => {});
+    }
+
     let data = null;
     try {
       data = await response.json();

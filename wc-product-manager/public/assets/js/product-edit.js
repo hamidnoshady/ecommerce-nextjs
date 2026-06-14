@@ -28,7 +28,7 @@ async function init() {
 
   if (window.PRODUCT_ID > 0) {
     await loadProduct(window.PRODUCT_ID);
-    if (window.CURRENT_USER.role === 'admin') {
+    if (window.CURRENT_USER.role === 'admin' || window.CURRENT_USER.role === 'superadmin') {
       els.deleteBtn.classList.remove('hidden');
     }
   } else {

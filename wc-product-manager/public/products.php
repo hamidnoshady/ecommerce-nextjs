@@ -2,8 +2,11 @@
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/site_context.php';
+require_once __DIR__ . '/../includes/nav.php';
 
 $user = require_login_page();
+$site = require_site_page($user);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +21,7 @@ $user = require_login_page();
 
   <!-- Header -->
   <header class="sticky top-0 z-30 bg-white border-b border-gray-100">
+    <?php render_site_switcher($site); ?>
     <div class="px-4 pt-4 pb-3 flex items-center justify-between">
       <h1 class="text-lg font-semibold text-gray-900">Products</h1>
       <button id="select-toggle" class="text-sm font-medium text-gray-600 active:text-gray-900">Select</button>
@@ -61,17 +65,7 @@ $user = require_login_page();
   </div>
 
   <!-- Bottom navigation -->
-  <nav class="bottom-nav fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 flex">
-    <a href="/products.php" class="flex-1 py-3 text-center text-xs font-medium text-gray-900">
-      <div class="text-lg leading-none mb-0.5">▤</div>Products
-    </a>
-    <a href="/batch.php" class="flex-1 py-3 text-center text-xs font-medium text-gray-400">
-      <div class="text-lg leading-none mb-0.5">%</div>Batch
-    </a>
-    <button id="logout-btn" class="flex-1 py-3 text-center text-xs font-medium text-gray-400">
-      <div class="text-lg leading-none mb-0.5">⎋</div>Logout
-    </button>
-  </nav>
+  <?php render_bottom_nav('products', $user); ?>
 
   <!-- Filter sheet -->
   <div id="filter-sheet" class="hidden fixed inset-0 z-40">
@@ -133,7 +127,8 @@ $user = require_login_page();
   </div>
 
   <script>
-    window.CURRENT_USER = <?php echo json_encode(['phone' => $user['phone'], 'role' => $user['role']]); ?>;
+    window.CURRENT_USER = <?php echo json_encode(['id' => $user['id'], 'phone' => $user['phone'], 'name' => $user['name'], 'role' => $user['role']]); ?>;
+    window.CURRENT_SITE = <?php echo json_encode(['id' => $site['id'], 'name' => $site['name']]); ?>;
   </script>
   <script src="/assets/js/app.js"></script>
   <script src="/assets/js/products.js"></script>
