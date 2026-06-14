@@ -3,8 +3,11 @@
 require_once __DIR__ . '/../../includes/helpers.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/WooCommerceClient.php';
+require_once __DIR__ . '/../../includes/Sites.php';
+require_once __DIR__ . '/../../includes/site_context.php';
 
-require_login_api();
+$user = require_login_api();
+$site = require_site_api($user);
 verify_csrf_api();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -18,8 +21,7 @@ if ($id <= 0) {
     json_response(['error' => 'Invalid product id'], 422);
 }
 
-$config = app_config();
-$client = new WooCommerceClient($config['woocommerce']);
+$client = woocommerce_client_for_site($site);
 
 if (isset($body['delta'])) {
     // Adjust relative to the current stock quantity.

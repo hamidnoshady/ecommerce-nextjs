@@ -2,8 +2,10 @@
 
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/site_context.php';
 
 $user = require_login_page();
+$site = require_site_page($user);
 $productId = (int) ($_GET['id'] ?? 0);
 ?>
 <!DOCTYPE html>
@@ -21,6 +23,7 @@ $productId = (int) ($_GET['id'] ?? 0);
     <a href="/products.php" class="text-gray-500 text-xl leading-none">&larr;</a>
     <h1 class="text-base font-semibold text-gray-900"><?php echo $productId > 0 ? 'Edit product' : 'New product'; ?></h1>
   </header>
+  <?php require_once __DIR__ . '/../includes/nav.php'; render_site_switcher($site); ?>
 
   <main class="px-4 py-4">
     <div id="loading" class="text-center py-16 text-gray-400 text-sm">Loading...</div>
@@ -108,7 +111,8 @@ $productId = (int) ($_GET['id'] ?? 0);
   </main>
 
   <script>
-    window.CURRENT_USER = <?php echo json_encode(['phone' => $user['phone'], 'role' => $user['role']]); ?>;
+    window.CURRENT_USER = <?php echo json_encode(['id' => $user['id'], 'phone' => $user['phone'], 'name' => $user['name'], 'role' => $user['role']]); ?>;
+    window.CURRENT_SITE = <?php echo json_encode(['id' => $site['id'], 'name' => $site['name']]); ?>;
     window.PRODUCT_ID = <?php echo (int) $productId; ?>;
   </script>
   <script src="/assets/js/app.js"></script>

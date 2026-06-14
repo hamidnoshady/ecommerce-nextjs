@@ -57,7 +57,9 @@ switch ($action) {
         }
         json_response([
             'authenticated' => true,
+            'id' => $user['id'],
             'phone' => $user['phone'],
+            'name' => $user['name'],
             'role' => $user['role'],
             'csrf_token' => csrf_token(),
         ]);

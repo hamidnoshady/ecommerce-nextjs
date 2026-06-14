@@ -25,7 +25,7 @@ async function init() {
   document.getElementById('batch-content').classList.remove('hidden');
   document.getElementById('selection-count').textContent = selectedIds.length;
 
-  if (window.CURRENT_USER.role === 'admin') {
+  if (window.CURRENT_USER.role === 'admin' || window.CURRENT_USER.role === 'superadmin') {
     document.getElementById('price-section').classList.remove('hidden');
   }
 

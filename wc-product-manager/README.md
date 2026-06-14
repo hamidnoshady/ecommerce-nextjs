@@ -6,8 +6,12 @@ deployed to any shared PHP 8+ host by uploading files.
 
 ## Features
 
-- **Login via SMS OTP** (Kavenegar) — no passwords, restricted to a configured
-  list of admin / shop-manager phone numbers.
+- **Login via SMS OTP** (Kavenegar) — no passwords. Accounts are created and
+  managed in-app (see *Multi-site & user management* below); the first time a
+  phone number listed under `superadmins` in `config.php` logs in, a
+  superadmin account is created automatically.
+- **Multi-site**: connect any number of WooCommerce stores, each with its own
+  REST API credentials, and switch between the ones you're assigned to.
 - **Product list**: mobile cards with image, price, stock, search, and filters
   (category, stock status, price range, on-sale only), infinite scroll.
 - **Quick stock +/-** buttons directly on each product card.
@@ -20,8 +24,14 @@ deployed to any shared PHP 8+ host by uploading files.
     (e.g. `.99`).
   - Set or adjust stock quantity for many products at once.
   - Preview all changes before applying.
-- **Roles**: `admin` (full access, including delete and bulk price changes)
-  and `shop_manager` (edit products and stock, no delete / bulk pricing).
+- **Roles**:
+  - `superadmin`: manages WooCommerce sites and admin/shop-manager accounts
+    (in *Admin → Sites* and *Admin → Users*), plus everything an `admin` can do
+    on any site.
+  - `admin`: full product access on their assigned site(s), including delete
+    and bulk price changes.
+  - `shop_manager`: edit products and stock on their assigned site(s), no
+    delete / bulk pricing.
 
 ## Requirements
 
@@ -37,11 +47,12 @@ deployed to any shared PHP 8+ host by uploading files.
 wc-product-manager/
   config/        # config.php (your credentials, NOT committed)
   includes/      # PHP classes & helpers (WooCommerce client, auth, etc.)
-  data/          # SQLite database for OTP codes (created automatically)
+  data/          # SQLite database for users/sites/OTP codes (created automatically)
   public/        # web root — point your domain/subdomain here
     api/         # backend JSON endpoints
+    admin/       # superadmin-only pages (manage sites & users)
     assets/      # CSS/JS
-    *.php        # pages (login, products, product-edit, batch, ...)
+    *.php        # pages (login, sites, products, product-edit, batch, ...)
 ```
 
 `config/`, `includes/`, and `data/` are outside `public/` and additionally
@@ -52,7 +63,8 @@ ever pointed at the project root by mistake.
 
 1. **Get WooCommerce REST API credentials**
    In WordPress: *WooCommerce → Settings → Advanced → REST API → Add key*.
-   Give it **Read/Write** permissions. Copy the Consumer key/secret.
+   Give it **Read/Write** permissions. Copy the Consumer key/secret. You'll
+   enter these in the app after logging in (step 6), not in `config.php`.
 
 2. **Set up Kavenegar OTP**
    - Create an account at kavenegar.com and get your API key.
@@ -64,10 +76,10 @@ ever pointed at the project root by mistake.
    cp config/config.sample.php config/config.php
    ```
    Edit `config/config.php`:
-   - `woocommerce.store_url`, `consumer_key`, `consumer_secret`
    - `kavenegar.api_key` and `kavenegar.template`
-   - `users`: map each admin/shop-manager's mobile number (format
-     `09xxxxxxxxx`) to `'admin'` or `'shop_manager'`
+   - `superadmins`: list the mobile number(s) (format `09xxxxxxxxx`) that
+     should become superadmins on first login. Everyone else (admins and
+     shop managers) is created later from the *Admin → Users* page.
 
 4. **Upload**
    Upload the entire `wc-product-manager` directory to your server, and point
@@ -80,20 +92,37 @@ ever pointed at the project root by mistake.
    line of defense (requires `AllowOverride All` / Apache).
 
 5. **Permissions**
-   Ensure the web server user can create/write `data/otp.sqlite`
+   Ensure the web server user can create/write `data/app.sqlite`
    (the `data/` folder needs to be writable).
 
 6. **Open the app**
-   Visit your domain — you'll be redirected to `/login.php`. Enter an
-   authorized mobile number to receive an OTP via SMS.
+   Visit your domain — you'll be redirected to `/login.php`. Log in with a
+   phone number listed under `superadmins` to receive an OTP via SMS; this
+   bootstraps your superadmin account.
+
+   Then, as superadmin:
+   - Go to *Admin → Sites* and add your WooCommerce store(s) (name, store URL,
+     consumer key/secret, SSL verification).
+   - Go to *Admin → Users* to create `admin` / `shop_manager` accounts and
+     assign each one to one or more sites.
+   - Each user (including superadmin) picks/switches their active site from
+     `/sites.php`, accessible from the bottom nav. Superadmins can access
+     every site; other roles only see the sites assigned to them.
 
 ## Security notes
 
 - WooCommerce API credentials and the Kavenegar API key are only ever used
-  server-side; the browser never sees them.
+  server-side; the browser never sees them. Site credentials shown in the
+  *Admin → Sites* page are masked (only the first/last few characters).
 - All write operations (`/api/*.php` POST/PUT/DELETE) require a valid session
   and a matching CSRF token (`X-CSRF-Token` header).
 - OTP requests are rate-limited per phone number (default: 3 requests per
   10 minutes), and codes expire after 2 minutes.
-- Only phone numbers listed in `config.php` under `users` can request an OTP
-  or log in.
+- Anyone can request an OTP, but logging in only creates an account if the
+  phone number is listed under `superadmins` (bootstraps a superadmin) or
+  already has an account created by a superadmin via *Admin → Users*.
+- Managing sites and users (`/admin/sites.php`, `/admin/users.php`, and the
+  corresponding write APIs) is restricted to `superadmin` accounts.
+  Superadmins cannot change their own role or delete their own account.
+- Every product/stock/batch API call operates on the currently selected site
+  and re-checks that the logged-in user is allowed to access it.

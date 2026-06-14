@@ -3,14 +3,15 @@
 require_once __DIR__ . '/../../includes/helpers.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/WooCommerceClient.php';
+require_once __DIR__ . '/../../includes/Sites.php';
+require_once __DIR__ . '/../../includes/site_context.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-$config = app_config();
-$client = new WooCommerceClient($config['woocommerce']);
+$user = require_login_api();
+$site = require_site_api($user);
+$client = woocommerce_client_for_site($site);
 
 if ($method === 'GET') {
-    require_login_api();
-
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) {
         json_response(['error' => 'Invalid product id'], 422);
@@ -24,8 +25,7 @@ if ($method === 'GET') {
     json_response(['item' => map_product_detail($result['data'])]);
 }
 
-// All write operations require login + CSRF.
-require_login_api();
+// All write operations require CSRF.
 verify_csrf_api();
 
 $body = json_body();
@@ -48,7 +48,7 @@ if ($method === 'POST' || $method === 'PUT') {
 }
 
 if ($method === 'DELETE') {
-    require_role_api(['admin']);
+    require_role_api(['admin', 'superadmin']);
 
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) {

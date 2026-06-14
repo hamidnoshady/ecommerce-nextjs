@@ -3,11 +3,12 @@
 require_once __DIR__ . '/../../includes/helpers.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/WooCommerceClient.php';
+require_once __DIR__ . '/../../includes/Sites.php';
+require_once __DIR__ . '/../../includes/site_context.php';
 
-require_login_api();
-
-$config = app_config();
-$client = new WooCommerceClient($config['woocommerce']);
+$user = require_login_api();
+$site = require_site_api($user);
+$client = woocommerce_client_for_site($site);
 
 $result = $client->listCategories(['orderby' => 'name', 'order' => 'asc']);
 
